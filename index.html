@@ -2,75 +2,68 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CineVault — Movie Search & Watchlist Explorer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Search TV shows with the TVMaze API and save your favorites.">
+  <title>TV Show Explorer | CSE-2340 MP3-MP4</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <a class="skip" href="#main">Skip to content</a>
-  <header class="topbar">
-    <h1 class="brand">🎬 Cine<span>Vault</span></h1>
-    <nav class="tabs" aria-label="Views">
-      <button class="tab active" id="tab-search" data-view="search" aria-pressed="true">Search</button>
-      <button class="tab" id="tab-watchlist" data-view="watchlist" aria-pressed="false">Watchlist <span class="badge" id="count">0</span></button>
-    </nav>
-    <button class="ghost" id="btn-settings" aria-label="API key settings">⚙ API Key</button>
+  <header class="site-header">
+    <h1>TV Show Explorer</h1>
+    <p>Search shows, filter the results, and save your favorites.</p>
   </header>
 
-  <main id="main">
-    <section id="view-search">
-      <form id="search-form" class="controls" role="search">
-        <label class="grow">Title or keyword
-          <input type="search" id="query" placeholder="e.g. Inception, Batman…" required>
-        </label>
-        <label>Type
-          <select id="type"><option value="">All</option><option value="movie">Movies</option><option value="series">Series</option><option value="episode">Episodes</option></select>
-        </label>
-        <label>Year
-          <input type="number" id="year" placeholder="Any" min="1888" max="2100">
-        </label>
-        <label>Sort
-          <select id="sort"><option value="relevance">Relevance</option><option value="year-desc">Newest first</option><option value="year-asc">Oldest first</option><option value="title">Title A–Z</option></select>
-        </label>
-        <button class="primary" type="submit">Search</button>
+  <main class="layout">
+    <!-- SEARCH AREA -->
+    <section id="search-section" class="panel" aria-labelledby="search-heading">
+      <h2 id="search-heading">Search</h2>
+      <form id="search-form" role="search">
+        <label for="search-input" class="visually-hidden">Show title</label>
+        <input id="search-input" type="search" placeholder="e.g. Breaking Bad, Friends, Sherlock" autocomplete="off" required>
+        <button type="submit" class="btn btn-primary">Search</button>
       </form>
     </section>
 
-    <section id="view-watchlist" hidden>
-      <div class="controls">
-        <label class="grow">Filter saved
-          <input type="search" id="wl-query" placeholder="Search your watchlist…">
-        </label>
-        <label>Status
-          <select id="wl-status"><option value="all">All</option><option value="unwatched">To watch</option><option value="watched">Watched</option></select>
-        </label>
-        <label>Sort
-          <select id="wl-sort"><option value="added">Recently added</option><option value="title">Title A–Z</option><option value="year-desc">Newest first</option><option value="year-asc">Oldest first</option></select>
-        </label>
-        <button class="danger" id="clear-all">Clear all</button>
+    <!-- STATUS MESSAGES: idle, loading, error, empty (filled by app.js) -->
+    <section id="status-area" class="status-area" role="status" aria-live="polite"></section>
+
+    <!-- RESULTS AREA -->
+    <section id="results-section" class="panel" aria-labelledby="results-heading" hidden>
+      <div class="section-header">
+        <h2 id="results-heading">Results <span id="results-count" class="badge">0</span></h2>
+        <div class="controls">
+          <label for="genre-filter">Genre</label>
+          <select id="genre-filter"><option value="all">All genres</option></select>
+          <label for="sort-select">Sort by</label>
+          <select id="sort-select">
+            <option value="relevance">Best match</option>
+            <option value="rating">Rating (high to low)</option>
+            <option value="name">Name (A-Z)</option>
+            <option value="year">Newest first</option>
+          </select>
+        </div>
       </div>
+      <ul id="results-list" class="card-grid"></ul>
     </section>
 
-    <div id="status" role="status" aria-live="polite"></div>
-    <div id="grid" class="grid"></div>
-    <div class="center"><button class="ghost" id="load-more" hidden>Load more</button></div>
+    <!-- FAVORITES AREA (saved in localStorage) -->
+    <section id="favorites-section" class="panel" aria-labelledby="favorites-heading">
+      <div class="section-header">
+        <h2 id="favorites-heading">My Favorites <span id="favorites-count" class="badge">0</span></h2>
+        <button id="clear-favorites" class="btn btn-outline" type="button">Clear all</button>
+      </div>
+      <p id="favorites-empty" class="empty-note">No favorites yet. Click "Add to favorites" on any show.</p>
+      <ul id="favorites-list" class="card-grid"></ul>
+    </section>
   </main>
 
-  <dialog id="details" aria-label="Movie details">
-    <button class="ghost close" id="close-details" aria-label="Close">✕</button>
-    <div id="details-body"></div>
-  </dialog>
+  <footer class="site-footer">
+    <p>CSE-2340 Software Development I, International Islamic University Chittagong. Data from <a href="https://www.tvmaze.com/api" target="_blank" rel="noopener">TVMaze</a>.</p>
+  </footer>
 
-  <dialog id="settings" aria-label="API key settings">
-    <form method="dialog" id="key-form" class="stack">
-      <h2>OMDb API Key</h2>
-      <p>Get a free key at <a href="https://www.omdbapi.com/apikey.aspx" target="_blank" rel="noopener">omdbapi.com</a>. It is stored only in your browser.</p>
-      <input type="text" id="key-input" placeholder="Paste your key" autocomplete="off">
-      <div class="row"><button class="ghost" value="cancel">Cancel</button><button class="primary" id="save-key" value="ok">Save</button></div>
-    </form>
-  </dialog>
-
-  <div id="toast" role="status" aria-live="polite"></div>
+  <!-- Order matters: storage and api define functions that app.js uses -->
+  <script src="js/storage.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
